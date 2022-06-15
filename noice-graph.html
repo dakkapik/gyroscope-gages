@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noice graph</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div id="noicePlotGraph" style="width:100%;max-width:700px"></div>
+</body>
+<script>
+    class Fluxuator {
+      constructor (name) {
+        this.name = name;
+        this.y = [0]
+        this.x = [0]
+      }
+
+      tic (value) {
+        this.y.push(value)
+        this.x.push(this.x[this.x.length - 1] + 1)
+      }
+
+      draw() {
+        const data = [{
+          x: this.x,
+          y: this.y,
+          mode: "lines"
+        }]
+
+        const layout = {
+          xaxis: {range: [0, this.x.length + 20], title: this.name},
+          yaxis: {range: [-100, 100], title: "degrees per tenth of second"},
+          title: "Noice Graph"
+        }
+
+        Plotly.newPlot("noicePlotGraph", data, layout)
+      }
+    }
+    
+    const Gx = new Fluxuator("Gx")
+
+    var xArray = [50,60,70,80,90,100,110,120,130,140,150];
+    var yArray = [7,8,8,9,9,9,10,11,14,14,15];  
+
+    yArray.forEach(num => {
+      Gx.tic(num)
+      Gx.draw()
+    })
+    </script>
+</html>

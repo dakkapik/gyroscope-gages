@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gyroscope gages</title>
+    <style>
+        html, body {
+            box-sizing: border-box;
+            margin: 0;
+        }
+        .slidecontainer {
+            width: 100%; /* Width of the outside container */
+        }
+
+        /* The slider itself */
+        .slider {
+            -webkit-appearance: none;  /* Override default CSS styles */
+            appearance: none;
+            width: 100%; /* Full-width */
+            height: 25px; /* Specified height */
+            background: #414141; /* Grey background */
+            outline: none; /* Remove outline */
+            opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+            -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+            transition: opacity .2s;
+        }
+
+        /* Mouse-over effects */
+        .slider:hover {
+            opacity: 1; /* Fully shown on mouse-over */
+        }
+
+        /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none; /* Override default look */
+            appearance: none;
+            width: 25px; /* Set a specific slider handle width */
+            height: 25px; /* Slider handle height */
+            background: #cd0f0f; 
+            cursor: pointer; /* Cursor on hover */
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px; /* Set a specific slider handle width */
+            height: 25px; /* Slider handle height */
+            background: #ff0cbe; 
+            cursor: pointer; /* Cursor on hover */
+        }
+    </style>
+</head>
+<body>
+    <canvas></canvas>
+    <div class="slidecontainer">
+        <input type="range" min="-1000" max="1000" value="0" class="slider" id="range">
+    </div>
+    <p id="output"></p>
+</body>
+<script>
+    const canvas = document.querySelector("canvas");
+    const slider = document.getElementById("range");
+    const output = document.getElementById("output")
+    canvas.width = 600
+    canvas.height = 600
+    const offset = {x: canvas.clientLeft, y: canvas.clientTop}
+    const c = canvas.getContext("2d")
+    output.innerHTML = "slider value: " + slider.value; 
+
+    class CircleGage {
+        constructor (x,y,radius) {
+            this.center = {
+                x: x + offset.x,
+                y: y + offset.y
+            }
+            this.radius = radius
+            this.mouseRelative = {}
+            this.angle = 0
+
+            canvas.addEventListener("mousemove", (e) => {
+                this.mouseRelative.x = e.clientX - this.center.x
+                this.mouseRelative.y = e.clientY - this.center.y
+                this.mouseRelative.h = Math.hypot(this.mouseRelative.x , this.mouseRelative.y)
+                this.angle = Math.acos(this.mouseRelative.x/this.mouseRelative.h)
+                mouseDis.innerHTML = JSON.stringify(this.mouseRelative)
+            })
+        }
+
+        draw() {
+            c.fillStyle = "black"
+            c.beginPath()
+            c.moveTo(this.center.x, this.center.y)
+            if(this.mouseRelative.y < 0) {
+                if(mouse.x < 0){
+                    c.ellipse(this.center.x, this.center.y, this.radius, this.radius, 0, Math.PI / 2 , - this.angle )
+                } else {
+                    c.ellipse(this.center.x, this.center.y, this.radius, this.radius, 0, Math.PI / 2 , - this.angle , true)
+                }
+            } else {
+                if(this.mouseRelative.x < 0){
+                    c.ellipse(this.center.x, this.center.y, this.radius, this.radius, 0, Math.PI / 2 , this.angle)
+                } else {
+                    c.ellipse(this.center.x, this.center.y, this.radius, this.radius, 0, Math.PI / 2 , this.angle, true)
+                }
+            }
+            c.closePath()
+            c.fill()
+        }
+
+    }
+
+    class GyroscopeGage {
+        constructor (x, y, radius) {
+            this.center = {
+                x: x + offset.x,
+                y: y + offset.y
+            }
+            this.radius = radius
+            this.cirRelative = {x: 0, y: 0}
+            this.mouseRelative = {x: 0,y: 0,h: 0}
+            this.angle = Math.PI / 2
+
+            // MOUSE CONTROL FOR TESTING
+            canvas.addEventListener("mousemove", (e) => {
+                this.mouseRelative.x = e.clientX - this.center.x
+                this.mouseRelative.y = e.clientY - this.center.y
+                this.mouseRelative.h = Math.hypot(this.mouseRelative.x, this.mouseRelative.y)
+                this.angle = Math.acos(this.mouseRelative.x/this.mouseRelative.h)
+                mouseDis.innerHTML = JSON.stringify(this.mouseRelative)
+            })
+        }
+
+        setAngle = ( angle ) => this.angle = angle
+    
+        draw() {
+            c.fillStyle = "black"
+            c.strokeStyle = "red"
+            //gyro
+            c.beginPath()
+            if(this.mouseRelative.y < 0){
+                c.ellipse(this.center.x, this.center.y, this.radius, this.radius, -this.angle, -Math.PI/2, Math.PI/2)
+                c.fill()
+                c.ellipse(this.center.x, this.center.y, this.radius, this.radius, -this.angle, Math.PI/2, -Math.PI/2)
+                c.stroke()
+                this.cirRelative.x = this.center.x + Math.cos(-this.angle) * this.radius
+                this.cirRelative.y = this.center.y + Math.sin(-this.angle) * this.radius
+            } else {
+                c.ellipse(this.center.x, this.center.y, this.radius, this.radius, this.angle, -Math.PI/2, Math.PI/2)
+                c.fill()
+                c.ellipse(this.center.x, this.center.y, this.radius, this.radius, this.angle, Math.PI/2, -Math.PI/2)
+                c.stroke()
+                this.cirRelative.x = this.center.x + Math.cos(this.angle) * this.radius
+                this.cirRelative.y = this.center.y + Math.sin(this.angle) * this.radius
+            }
+            // line down
+            c.moveTo(this.center.x, this.center.y)
+            c.lineTo(this.cirRelative.x, this.cirRelative.y)
+            // level
+            c.moveTo(this.center.x - this.radius, this.center.y)
+            c.lineTo(this.center.x + this.radius, this.center.y)
+            c.stroke()
+        }
+    }
+
+    const gageX = new GyroscopeGage(100, 300, 100)
+    const gageY = new GyroscopeGage(300, 300, 100)
+    const gageZ = new GyroscopeGage(500, 300, 100)
+
+    slider.oninput = function() {
+        const value = this.value / 100
+        output.innerHTML = "slider value: " + value
+        gageX.setAngle(value)
+        gageZ.setAngle(value)
+        gageY.setAngle(value)
+    }
+
+    animate()
+    function animate() {
+        window.requestAnimationFrame(animate)
+        c.fillStyle = "white"
+        c.fillRect(0,0,canvas.width, canvas.height)
+        gageX.draw()
+        gageZ.draw()
+        gageY.draw()
+    }
+</script>
+</html>
